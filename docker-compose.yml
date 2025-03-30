@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  mongodb:
+    build:
+      context: .
+      dockerfile: Dockerfile.mongo
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: node_app
+    restart: always
+    depends_on:
+      - mongodb
+    ports:
+      - "3001:3001"
+    environment:
+      MONGO_URI: "mongodb://mongodb:27017/dininit_monitoring"
+
+volumes:
+  mongo_data:

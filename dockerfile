@@ -9,11 +9,9 @@ COPY package.json package-lock.json ./
 RUN npm install --legacy-peer-deps
 
 # Copy necessary files and folders
-COPY .next .next
-COPY public public
-COPY next.config.mjs .  
 COPY server.js .
-COPY app/ .
+COPY app/ app/
+
 
 # Set environment variable for production
 ENV NODE_ENV=production
