@@ -64,7 +64,7 @@ jobs:
         run: ls -R  # Verifies all build outputs
 
       - name: Create Tar Archive
-        run: tar -cvf node-build.tar app/ dockerfile package.json package-lock.json .next/ next.config.mjs server.js k8s/ 
+        run: tar -cvf node-build.tar dockerfile app/ package.json package-lock.json .next/ next.config.mjs server.js k8s/ 
 
       - name: Upload Build Artifacts (Only Required Files)
         uses: actions/upload-artifact@v4
@@ -112,15 +112,15 @@ jobs:
         run: az acr show --name ${{ secrets.ACR_NAME }} --query "loginServer" --output tsv
 
       - name: Set Docker Image Name with Git SHA
-        run: echo "IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/dinenit-ui-app:${{ github.sha }}" >> $GITHUB_ENV
+        run: echo "IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:${{ github.sha }}" >> $GITHUB_ENV
 
       - name: Build Docker Image
         run: docker build -t $IMAGE_NAME .
 
       - name: Push Docker Image to ACR
         run: |
-          docker tag $IMAGE_NAME ${{ secrets.ACR_NAME }}.azurecr.io/dinenit-ui-app:latest
-          docker push ${{ secrets.ACR_NAME }}.azurecr.io/dinenit-ui-app:latest
+          docker tag $IMAGE_NAME ${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:latest
+          docker push ${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:latest
 
       # ✅ Verify if Image Exists in ACR
       - name: List Docker Images in ACR
@@ -130,8 +130,8 @@ jobs:
 
       - name: Show Image Tags in ACR
         run: |
-          echo "Showing available tags for dinenit-ui-app:"
-          az acr repository show-tags --name ${{ secrets.ACR_NAME }} --repository dinenit-ui-app --output table
+          echo "Showing available tags for dinenit-api-app:"
+          az acr repository show-tags --name ${{ secrets.ACR_NAME }} --repository dinenit-api-app --output table
 
       - name: Upload k8s folder
         uses: actions/upload-artifact@v4
@@ -145,8 +145,8 @@ jobs:
           name: promethues-folder
           path: promethues/
 
-  deploy-ui-to-aks:
-    name: Deploy UI to AKS
+  deploy-api-to-aks:
+    name: Deploy api to AKS
     runs-on: ubuntu-latest
     needs: docker-build
     permissions:
@@ -183,7 +183,7 @@ jobs:
       # # ✅ Replace Image Tag in Manifest Files
       # - name: Update Kubernetes Deployment Image
       #   run: |
-      #     sed -i "s|IMAGE_PLACEHOLDER|${{ secrets.ACR_NAME }}.azurecr.io/dinenit-ui-app:${{ github.sha }}|g" deployment.yml
+      #     sed -i "s|IMAGE_PLACEHOLDER|${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:${{ github.sha }}|g" deployment.yml
 
       - name: Apply Kubernetes Manifests
         run: |
@@ -195,7 +195,7 @@ jobs:
   # deploy-promethues-to-aks:
   #   name: Deploy Promethues & cAdvisor to AKS
   #   runs-on: ubuntu-latest
-  #   needs: deploy-ui-to-aks
+  #   needs: deploy-api-to-aks
   #   permissions:
   #     id-token: write
   #     contents: read
