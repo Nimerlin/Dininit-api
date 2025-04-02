@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { MongoClient } = require('mongodb');
 
-const uri = "mongodb://localhost:27017";
+const password = 'Nitin@2025';
+const encodedPassword = encodeURIComponent(password);
+const uri = `mongodb+srv://Nitin:${encodedPassword}@dinenit.cqxiskh.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri);
-
 /**
  * @swagger
  * /api/ticket:
