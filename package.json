@@ -16,9 +16,10 @@
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
     "express": "^4.21.2",
+    "fix": "^0.0.6",
     "gsap": "^3.12.5",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.11.0",
+    "mongodb": "^6.15.0",
     "next": "15.0.3",
     "prop-types": "^15.8.1",
     "react": "19.0.0-rc-66855b96-20241106",
@@ -29,5 +30,9 @@
   "devDependencies": {
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.14"
-  }
+  },
+  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).",
+  "main": "mongo-init.js",
+  "author": "",
+  "license": "ISC"
 }
