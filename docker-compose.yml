@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile.mongo
     container_name: mongodb
     restart: always
+    networks:
+      - app_network
     ports:
       - "27017:27017"
     volumes:
@@ -16,8 +18,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: node_app
+    container_name: dinenit_api
     restart: always
+    networks:
+      - app_network
     depends_on:
       - mongodb
     ports:
@@ -27,3 +31,6 @@ services:
 
 volumes:
   mongo_data:
+
+networks:
+  app_network:

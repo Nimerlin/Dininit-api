@@ -8,4 +8,4 @@ WORKDIR /data/db
 COPY mongo-init.js /docker-entrypoint-initdb.d/
 
 # Expose MongoDB default port
-EXPOSE 27017
+EXPOSE 27017 
