@@ -64,7 +64,7 @@ jobs:
         run: ls -R  # Verifies all build outputs
 
       - name: Create Tar Archive
-        run: tar -cvf node-build.tar dockerfile package.json package-lock.json .next/ public/ next.config.mjs server.js k8s/ promethues/
+        run: tar -cvf node-build.tar dockerfile package.json package-lock.json .next/ next.config.mjs server.js k8s/ 
 
       - name: Upload Build Artifacts (Only Required Files)
         uses: actions/upload-artifact@v4
