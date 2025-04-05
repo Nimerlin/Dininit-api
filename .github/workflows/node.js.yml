@@ -64,7 +64,7 @@ jobs:
         run: ls -R  # Verifies all build outputs
 
       - name: Create Tar Archive
-        run: tar -cvf node-build.tar dockerfile app/ package.json package-lock.json .next/ next.config.mjs server.js k8s/ 
+        run: tar -cvf node-build.tar dockerfile app/ package.json package-lock.json .next/ next.config.mjs server.js k8s/ promethues/
 
       - name: Upload Build Artifacts (Only Required Files)
         uses: actions/upload-artifact@v4
@@ -192,49 +192,49 @@ jobs:
       - name: Verify Deployment
         run: kubectl get pods -o wide
   
-  # deploy-promethues-to-aks:
-  #   name: Deploy Promethues & cAdvisor to AKS
-  #   runs-on: ubuntu-latest
-  #   needs: deploy-api-to-aks
-  #   permissions:
-  #     id-token: write
-  #     contents: read
-  #   environment: prod
-  #   steps:
+  deploy-promethues-to-aks:
+    name: Deploy Promethues & cAdvisor to AKS
+    runs-on: ubuntu-latest
+    needs: deploy-api-to-aks
+    permissions:
+      id-token: write
+      contents: read
+    environment: prod
+    steps:
 
-  #     - name: Download Deployment and Services
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: promethues-folder
-  #         path: promethues/
+      - name: Download Deployment and Services
+        uses: actions/download-artifact@v4
+        with:
+          name: promethues-folder
+          path: promethues/
 
-  #     - name: List Files After Downloading Source Code
-  #       run: ls -R   
+      - name: List Files After Downloading Source Code
+        run: ls -R   
 
-  #     # ✅ Azure Login
-  #     - name: Log in to Azure
-  #       run: |
-  #         az login --service-principal \
-  #           --username ${{ secrets.AZURE_CLIENT_ID }} \
-  #           --password ${{ secrets.AZURE_CLIENT_SECRET }} \
-  #           --tenant ${{ secrets.AZURE_TENANT_ID }}
+      # ✅ Azure Login
+      - name: Log in to Azure
+        run: |
+          az login --service-principal \
+            --username ${{ secrets.AZURE_CLIENT_ID }} \
+            --password ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --tenant ${{ secrets.AZURE_TENANT_ID }}
 
-  #     - name: Set Kubernetes Context
-  #       run: |
-  #         az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
-  #           --name ${{ secrets.AKS_CLUSTER_NAME }}
+      - name: Set Kubernetes Context
+        run: |
+          az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
+            --name ${{ secrets.AKS_CLUSTER_NAME }}
 
-  #     - name: Verify Kubernetes Context
-  #       run: kubectl cluster-info
+      - name: Verify Kubernetes Context
+        run: kubectl cluster-info
 
-  #     # # ✅ Replace Image Tag in Manifest Files
-  #     # - name: Update Kubernetes Deployment Image
-  #     #   run: |
-  #     #     sed -i "s|IMAGE_PLACEHOLDER|${{ secrets.ACR_NAME }}.azurecr.io/dinenit-ui-app:${{ github.sha }}|g" deployment.yml
+      # # ✅ Replace Image Tag in Manifest Files
+      # - name: Update Kubernetes Deployment Image
+      #   run: |
+      #     sed -i "s|IMAGE_PLACEHOLDER|${{ secrets.ACR_NAME }}.azurecr.io/dinenit-ui-app:${{ github.sha }}|g" deployment.yml
 
-  #     - name: Apply Kubernetes Manifests
-  #       run: |
-  #         kubectl apply -f promethues/
+      - name: Apply Kubernetes Manifests
+        run: |
+          kubectl apply -f promethues/
 
-  #     - name: Verify Deployment
-  #       run: kubectl get pods -o wide
+      - name: Verify Deployment
+        run: kubectl get pods -o wide
