@@ -71,35 +71,43 @@
 //     console.log(`Swagger docs available at http://localhost:${PORT}/api/api-docs`);
 // });
 
-
 const express = require('express');
 const cors = require('cors');
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 
 const app = express();
-const router = express.Router(); // Use a router to group under /api
+const router = express.Router();
 
 // Middleware
-app.use(cors());
+app.use(cors()); // ✅ Default CORS (allow all)
+
+// ✅ Extra headers to avoid Swagger CORS issues
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  next();
+});
+
 app.use(express.json());
 
-// Swagger configuration
+// ✅ Swagger configuration
 const swaggerOptions = {
-    definition: {
-        openapi: "3.0.0",
-        info: {
-            title: "DinInit Monitoring API",
-            version: "1.0.0",
-            description: "API documentation for DinInit Monitoring API",
-        },
-        servers: [
-            {
-                url: "http://localhost:3001/api", // Updated base URL
-            },
-        ],
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "DinInit Monitoring API",
+      version: "1.0.0",
+      description: "API documentation for DinInit Monitoring API",
     },
-    apis: ["./app/api/*.js", "./server.js"],
+    servers: [
+      {
+        url: "/api", // ✅ RELATIVE path instead of http://localhost (fixes fetch in Kubernetes or reverse proxy)
+      },
+    ],
+  },
+  apis: ["./app/api/*.js", "./server.js"], // Swagger doc comments
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
@@ -131,20 +139,21 @@ router.use('/', viewTicketsRouter);
  *         description: Returns a welcome message.
  */
 router.get('/', (req, res) => {
-    res.json({ message: 'Welcome to DinInit Monitoring API' });
+  res.json({ message: 'Welcome to DinInit Monitoring API' });
 });
 
 // Mount router at /api
 app.use('/api', router);
 
-// Error handling middleware
+// Error handler
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Something broke!' });
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something broke!' });
 });
 
+// Start server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    console.log(`Swagger docs available at http://localhost:${PORT}/api/api-docs`);
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Swagger docs available at http://localhost:${PORT}/api/api-docs`);
 });
