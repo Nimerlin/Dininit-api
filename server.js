@@ -1,98 +1,34 @@
-// const express = require('express');
-// const cors = require('cors');
-// const swaggerJsdoc = require("swagger-jsdoc");
-// const swaggerUi = require("swagger-ui-express");
-
-// const app = express();
-
-// // Middleware
-// app.use(cors());
-// app.use(express.json());
-
-// // Swagger configuration
-// const swaggerOptions = {
-//     definition: {
-//         openapi: "3.0.0",
-//         info: {
-//             title: "DinInit Monitoring API",
-//             version: "1.0.0",
-//             description: "API documentation for DinInit Monitoring API",
-//         },
-//         servers: [
-//             {
-//                 url: "http://localhost:3001", // Change if needed
-//             },
-//         ],
-//     },
-//     apis: ["./app/api/*.js", "./server.js"], // Path to API docs
-// };
-
-// const swaggerDocs = swaggerJsdoc(swaggerOptions);
-// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
-// // Import routes with correct path
-// const signupRouter = require('./app/api/signup.js');  
-// const loginRouter = require('./app/api/login.js');    
-// const paymentRouter = require('./app/api/payment.js');
-// const verifyPaymentRouter = require('./app/api/verify-subscription.js');
-// const ticketRouter = require('./app/api/ticket.js');
-// const viewTicketsRouter = require('./app/api/view-tickets.js');
-
-// // Use routes
-// app.use('/api', signupRouter);
-// app.use('/api', loginRouter);
-// app.use('/api', paymentRouter);
-// app.use('/api', verifyPaymentRouter);
-// app.use('/api', ticketRouter);
-// app.use('/api', viewTicketsRouter);
-
-// /**
-//  * @swagger
-//  * /:
-//  *   get:
-//  *     summary: Welcome message for DinInit Monitoring API
-//  *     responses:
-//  *       200:
-//  *         description: Returns a welcome message.
-//  */
-// app.get('/', (req, res) => {
-//     res.json({ message: 'Welcome to DinInit Monitoring API' });
-// });
-
-// // Error handling middleware
-// app.use((err, req, res, next) => {
-//     console.error(err.stack);
-//     res.status(500).json({ error: 'Something broke!' });
-// });
-
-// const PORT = process.env.PORT || 3001;
-// app.listen(PORT, () => {
-//     console.log(`Server is running on port ${PORT}`);
-//     console.log(`Swagger docs available at http://localhost:${PORT}/api/api-docs`);
-// });
-
 const express = require('express');
 const cors = require('cors');
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
+const { MongoClient } = require('mongodb');
+require('dotenv').config();
 
 const app = express();
 const router = express.Router();
 
-// Middleware
-app.use(cors()); // ✅ Default CORS (allow all)
+// ===== MongoDB Atlas Connection =====
+const username = 'Nitin';
+const password = process.env.DB_PASSWORD; // Store in .env
+const encodedPassword = encodeURIComponent(password);
+const uri = `mongodb+srv://${username}:${encodedPassword}@dinenit.cqxiskh.mongodb.net/?retryWrites=true&w=majority`;
 
-// ✅ Extra headers to avoid Swagger CORS issues
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  next();
+const client = new MongoClient(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
 
+client.connect()
+  .then(() => console.log('✅ Connected to MongoDB Atlas'))
+  .catch(err => console.error('❌ MongoDB connection failed:', err));
+
+// ===== Middleware =====
+app.use(cors());
+app.options('*', cors()); // Preflight
 app.use(express.json());
 
-// ✅ Swagger configuration
+// ===== Swagger Setup =====
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
@@ -103,17 +39,33 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: "/api", // ✅ RELATIVE path instead of http://localhost (fixes fetch in Kubernetes or reverse proxy)
+        url: "", // Use current domain — works for both localhost & AKS
       },
     ],
   },
-  apis: ["./app/api/*.js", "./server.js"], // Swagger doc comments
+  apis: ["./app/api/*.js", "./server.js"],
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
-router.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// Import routes
+// Serve the raw Swagger JSON
+router.get('/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerDocs);
+});
+
+// Serve Swagger UI
+router.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(undefined, {
+    swaggerOptions: {
+      url: "/api/swagger.json", // Point to dynamically served Swagger JSON
+    },
+  })
+);
+
+// ===== Import Routes =====
 const signupRouter = require('./app/api/signup.js');
 const loginRouter = require('./app/api/login.js');
 const paymentRouter = require('./app/api/payment.js');
@@ -121,7 +73,7 @@ const verifyPaymentRouter = require('./app/api/verify-subscription.js');
 const ticketRouter = require('./app/api/ticket.js');
 const viewTicketsRouter = require('./app/api/view-tickets.js');
 
-// Use routes under /api
+// ===== API Routing =====
 router.use('/', signupRouter);
 router.use('/', loginRouter);
 router.use('/', paymentRouter);
@@ -131,7 +83,7 @@ router.use('/', viewTicketsRouter);
 
 /**
  * @swagger
- * /api:
+ * /:
  *   get:
  *     summary: Welcome message for DinInit Monitoring API
  *     responses:
@@ -142,18 +94,18 @@ router.get('/', (req, res) => {
   res.json({ message: 'Welcome to DinInit Monitoring API' });
 });
 
-// Mount router at /api
+// Mount all API under /api
 app.use('/api', router);
 
-// Error handler
+// ===== Error Handler =====
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something broke!' });
 });
 
-// Start server
+// ===== Start Server =====
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Swagger docs available at http://localhost:${PORT}/api/api-docs`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📘 Swagger UI available at http://localhost:${PORT}/api/api-docs`);
 });
