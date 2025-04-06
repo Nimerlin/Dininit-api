@@ -18,10 +18,10 @@ spec:
                 name: api-service
                 port:
                   number: 80
-          - path: /prometheus(/|$)(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: prometheus-service
-                port:
-                  number: 9090
+          # - path: /prometheus(/|$)(.*)
+          #   pathType: ImplementationSpecific
+          #   backend:
+          #     service:
+          #       name: prometheus-service
+          #       port:
+          #         number: 9090

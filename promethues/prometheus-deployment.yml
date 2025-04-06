@@ -43,4 +43,5 @@ spec:
     - protocol: TCP
       port: 9090
       targetPort: 9090
-  type: NodePort
+      nodePort: 30090   # 👈 Add this line
+  type: NodePort         # 👈 Change this from ClusterIP to NodePort
