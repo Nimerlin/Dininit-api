@@ -1,5 +1,3 @@
----
-# ConfigMap for Prometheus Configuration
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,9 +5,9 @@ metadata:
 data:
   prometheus.yml: |
     global:
-      scrape_interval: 15s
+      scrape_interval: 5s
 
     scrape_configs:
       - job_name: 'cadvisor'
         static_configs:
-          - targets: ['cadvisor-service:8080']
+          - targets: ['cadvisor:8080']

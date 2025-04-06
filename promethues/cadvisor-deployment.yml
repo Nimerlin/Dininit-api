@@ -1,11 +1,7 @@
----
-# cAdvisor Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cadvisor
-  labels:
-    app: cadvisor
 spec:
   replicas: 1
   selector:
@@ -22,19 +18,16 @@ spec:
           ports:
             - containerPort: 8080
           volumeMounts:
-            - name: rootfs
-              mountPath: /rootfs
+            - mountPath: /rootfs
+              name: rootfs
               readOnly: true
-            - name: var-run
-              mountPath: /var/run
-            - name: sys
-              mountPath: /sys
+            - mountPath: /var/run
+              name: var-run
+            - mountPath: /sys
+              name: sys
               readOnly: true
-            - name: docker
-              mountPath: /var/lib/docker
-              readOnly: true
-            - name: disk
-              mountPath: /dev/disk
+            - mountPath: /var/lib/docker
+              name: docker
               readOnly: true
       volumes:
         - name: rootfs
@@ -49,21 +42,14 @@ spec:
         - name: docker
           hostPath:
             path: /var/lib/docker
-        - name: disk
-          hostPath:
-            path: /dev/disk
-
 ---
-# cAdvisor Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: cadvisor-service
+  name: cadvisor
 spec:
   selector:
     app: cadvisor
   ports:
-    - protocol: TCP
-      port: 8080
+    - port: 8080
       targetPort: 8080
-  type: ClusterIP
