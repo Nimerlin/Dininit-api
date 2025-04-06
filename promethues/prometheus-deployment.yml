@@ -17,9 +17,9 @@ spec:
           image: prom/prometheus:latest
           args:
             - "--config.file=/etc/prometheus/prometheus.yml"
-            - "--web.external-url=/prometheus/"
-            - "--web.route-prefix=/prometheus/"
             - "--storage.tsdb.path=/prometheus"
+            - "--web.external-url=/prometheus/"
+            - "--web.route-prefix=/"
           ports:
             - containerPort: 9090
           volumeMounts:
