@@ -1,3 +1,5 @@
+---
+# ConfigMap for Prometheus Configuration
 apiVersion: v1
 kind: ConfigMap
 metadata:

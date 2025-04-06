@@ -1,3 +1,5 @@
+---
+# cAdvisor Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,6 +33,9 @@ spec:
             - name: docker
               mountPath: /var/lib/docker
               readOnly: true
+            - name: disk
+              mountPath: /dev/disk
+              readOnly: true
       volumes:
         - name: rootfs
           hostPath:
@@ -44,7 +49,12 @@ spec:
         - name: docker
           hostPath:
             path: /var/lib/docker
+        - name: disk
+          hostPath:
+            path: /dev/disk
+
 ---
+# cAdvisor Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -56,4 +66,4 @@ spec:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-  type: ClusterIP  # Expose only within the cluster
+  type: ClusterIP
