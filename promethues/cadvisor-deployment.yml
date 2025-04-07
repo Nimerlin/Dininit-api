@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: cadvisor
-  namespace: monitoring
+  labels:
+    app: cadvisor
 spec:
   selector:
     matchLabels:
@@ -17,6 +18,7 @@ spec:
           image: gcr.io/cadvisor/cadvisor:latest
           ports:
             - containerPort: 8080
+              name: http
           volumeMounts:
             - name: rootfs
               mountPath: /rootfs
@@ -42,3 +44,17 @@ spec:
         - name: docker
           hostPath:
             path: /var/lib/docker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cadvisor
+  labels:
+    app: cadvisor
+  namespace: monitoring
+spec:
+  selector:
+    app: cadvisor
+  ports:
+    - port: 8080
+      targetPort: 8080

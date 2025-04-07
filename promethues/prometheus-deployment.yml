@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prometheus
-  namespace: monitoring
+  labels:
+    app: prometheus
 spec:
   replicas: 1
   selector:
@@ -18,6 +19,7 @@ spec:
           image: prom/prometheus:latest
           args:
             - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--web.route-prefix=/prometheus"
             - "--web.external-url=/prometheus"
           ports:
             - containerPort: 9090
