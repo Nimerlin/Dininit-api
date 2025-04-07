@@ -1,9 +1,9 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: cadvisor
+  namespace: monitoring
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: cadvisor
@@ -18,16 +18,16 @@ spec:
           ports:
             - containerPort: 8080
           volumeMounts:
-            - mountPath: /rootfs
-              name: rootfs
+            - name: rootfs
+              mountPath: /rootfs
               readOnly: true
-            - mountPath: /var/run
-              name: var-run
-            - mountPath: /sys
-              name: sys
+            - name: var-run
+              mountPath: /var/run
+            - name: sys
+              mountPath: /sys
               readOnly: true
-            - mountPath: /var/lib/docker
-              name: docker
+            - name: docker
+              mountPath: /var/lib/docker
               readOnly: true
       volumes:
         - name: rootfs
@@ -42,14 +42,3 @@ spec:
         - name: docker
           hostPath:
             path: /var/lib/docker
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: cadvisor
-spec:
-  selector:
-    app: cadvisor
-  ports:
-    - port: 8080
-      targetPort: 8080
