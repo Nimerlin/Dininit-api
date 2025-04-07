@@ -4,16 +4,13 @@ metadata:
   name: prometheus-ingress
   namespace: monitoring
   annotations:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      rewrite ^/prometheus/(api/.*)$ /$1 break;
-      proxy_pass http://prometheus.monitoring.svc.cluster.local:9090;
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
     - http:
         paths:
-          - path: /prometheus/(api/.*)
+          - path: /prometheus(/|$)(api/.*)
             pathType: ImplementationSpecific
             backend:
               service:
