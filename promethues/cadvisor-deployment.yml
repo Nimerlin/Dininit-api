@@ -4,6 +4,7 @@ metadata:
   name: cadvisor
   labels:
     app: cadvisor
+  namespace: monitoring
 spec:
   selector:
     matchLabels:
