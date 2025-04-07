@@ -19,10 +19,10 @@ spec:
         - name: kube-state-metrics
           image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1
           ports:
-            - name: http-metrics
-              containerPort: 8080
-            - name: telemetry
+            - name: metrics
               containerPort: 8081
+            - name: health
+              containerPort: 8080
           resources:
             requests:
               memory: "64Mi"
@@ -39,12 +39,12 @@ metadata:
   labels:
     app: kube-state-metrics
 spec:
-  ports:
-    - name: http-metrics
-      port: 8080
-      targetPort: http-metrics
-    - name: telemetry
-      port: 8081
-      targetPort: telemetry
   selector:
     app: kube-state-metrics
+  ports:
+    - name: metrics
+      port: 8081
+      targetPort: metrics
+    - name: health
+      port: 8080
+      targetPort: health
