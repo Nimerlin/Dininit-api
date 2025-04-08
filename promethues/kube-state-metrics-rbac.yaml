@@ -13,7 +13,7 @@ rules:
       - persistentvolumes
       - namespaces
       - resourcequotas
-      - secrets                     # ✅ Added
+      - secrets
     verbs: ["list", "watch"]
   - apiGroups: ["apps"]
     resources:
@@ -48,4 +48,8 @@ rules:
   - apiGroups: ["coordination.k8s.io"]
     resources:
       - leases
+    verbs: ["list", "watch"]
+  - apiGroups: ["policy"]
+    resources:
+      - poddisruptionbudgets          # ✅ Added this line
     verbs: ["list", "watch"]
