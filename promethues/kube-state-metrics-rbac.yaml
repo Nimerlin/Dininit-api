@@ -20,6 +20,7 @@ rules:
       - namespaces
       - secrets
       - resourcequotas
+      - limitranges
     verbs: ["list", "watch"]
 
   - apiGroups: ["apps"]
