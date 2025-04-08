@@ -39,6 +39,7 @@ rules:
   - apiGroups: ["storage.k8s.io"]
     resources:
       - volumeattachments
+      - storageclasses        # ✅ Now included
     verbs: ["list", "watch"]
   - apiGroups: ["networking.k8s.io"]
     resources:
@@ -51,5 +52,5 @@ rules:
     verbs: ["list", "watch"]
   - apiGroups: ["coordination.k8s.io"]
     resources:
-      - leases           # ✅ Added this line
+      - leases
     verbs: ["list", "watch"]
