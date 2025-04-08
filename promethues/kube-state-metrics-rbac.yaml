@@ -18,7 +18,7 @@ rules:
       - persistentvolumeclaims
       - persistentvolumes
       - namespaces
-      - resourcequotas       # ✅ Added this line
+      - resourcequotas
     verbs: ["list", "watch"]
   - apiGroups: ["apps"]
     resources:
@@ -48,4 +48,8 @@ rules:
     resources:
       - validatingwebhookconfigurations
       - mutatingwebhookconfigurations
+    verbs: ["list", "watch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources:
+      - leases           # ✅ Added this line
     verbs: ["list", "watch"]
