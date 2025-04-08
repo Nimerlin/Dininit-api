@@ -18,6 +18,7 @@ rules:
       - persistentvolumeclaims
       - persistentvolumes
       - namespaces
+      - resourcequotas       # ✅ Added this line
     verbs: ["list", "watch"]
   - apiGroups: ["apps"]
     resources:
