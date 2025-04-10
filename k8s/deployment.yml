@@ -231,10 +231,15 @@ jobs:
           az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
             --name ${{ secrets.AKS_CLUSTER_NAME }}
 
-      - name: Create Kubernetes Secret from Template
+      # - name: Create Kubernetes Secret from Template
+      #   run: |
+      #     ENCODED_PASSWORD=$(echo -n "${{ secrets.DB_PASSWORD }}" | base64 | tr -d '\n')
+      #     sed "s|REPLACE_ME_BASE64|$ENCODED_PASSWORD|" k8s/secret-template.yml > k8s/secret.yml
+      
+      - name: Create secret.yml from template (stringData)
         run: |
-          ENCODED_PASSWORD=$(echo -n "${{ secrets.DB_PASSWORD }}" | base64 | tr -d '\n')
-          sed "s|REPLACE_ME_BASE64|$ENCODED_PASSWORD|" k8s/secret-template.yml > k8s/secret.yml
+          sed "s|REPLACE_ME_PLAIN|${{ secrets.DB_PASSWORD }}|" k8s/secret-template.yml > k8s/secret.yml
+
 
       - name: Apply Kubernetes Manifests
         run: |
