@@ -1,3 +1,47 @@
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: dinenit-api-app
+#   labels:
+#     app: dinenit-api-app
+# spec:
+#   replicas: 1  # Adjust as needed
+#   selector:
+#     matchLabels:
+#       app: dinenit-api-app
+#   template:
+#     metadata:
+#       labels:
+#         app: dinenit-api-app
+#         env: prod
+#     spec:
+#       containers:
+#         - name: dinenit-api-container
+#           image: dinenitacrdev.azurecr.io/dinenit-api-app:latest  # Change to your ACR image
+#           ports:
+#             - containerPort: 3001
+#           env:
+#             - name: NODE_ENV
+#               value: "production"
+#           resources:
+#             limits:
+#               cpu: "500m"
+#               memory: "512Mi"
+#             requests:
+#               cpu: "250m"
+#               memory: "256Mi"
+#           livenessProbe:
+#             httpGet:
+#               path: /api/
+#               port: 3001
+#             initialDelaySeconds: 10
+#             periodSeconds: 5
+#           readinessProbe:
+#             httpGet:
+#               path: /api/
+#               port: 3001
+#             initialDelaySeconds: 5
+#             periodSeconds: 5
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,7 +49,7 @@ metadata:
   labels:
     app: dinenit-api-app
 spec:
-  replicas: 1  # Adjust as needed
+  replicas: 1
   selector:
     matchLabels:
       app: dinenit-api-app
@@ -17,12 +61,17 @@ spec:
     spec:
       containers:
         - name: dinenit-api-container
-          image: dinenitacrdev.azurecr.io/dinenit-api-app:latest  # Change to your ACR image
+          image: dinenitacrdev.azurecr.io/dinenit-api-app:latest
           ports:
             - containerPort: 3001
           env:
             - name: NODE_ENV
               value: "production"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dinenit-db-secret
+                  key: DB_PASSWORD
           resources:
             limits:
               cpu: "500m"
