@@ -10,7 +10,7 @@ const router = express.Router();
 
 // ===== MongoDB Atlas Connection =====
 const username = 'Nitin';
-const password = process.env.DB_PASSWORD; // Store in .env
+const password = process.env.DB_PASSWORD;
 const encodedPassword = encodeURIComponent(password);
 const uri = `mongodb+srv://${username}:${encodedPassword}@dinenit.cqxiskh.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -25,7 +25,7 @@ client.connect()
 
 // ===== Middleware =====
 app.use(cors());
-app.options('*', cors()); // Preflight
+app.options('*', cors());
 app.use(express.json());
 
 // ===== Swagger Setup =====
@@ -39,7 +39,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: "", // Use current domain — works for both localhost & AKS
+        url: "", // Leave empty for relative paths
       },
     ],
   },
@@ -48,19 +48,19 @@ const swaggerOptions = {
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
-// Serve the raw Swagger JSON
+// Serve the raw Swagger JSON at /api/swagger.json
 router.get('/swagger.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerDocs);
 });
 
-// Serve Swagger UI
+// Serve Swagger UI at /api/api-docs
 router.use(
   "/api-docs",
   swaggerUi.serve,
   swaggerUi.setup(undefined, {
     swaggerOptions: {
-      url: "/api/swagger.json", // Point to dynamically served Swagger JSON
+      url: "/api/swagger.json", // <- Correct path behind Ingress /api/
     },
   })
 );
@@ -94,7 +94,7 @@ router.get('/', (req, res) => {
   res.json({ message: 'Welcome to DinInit Monitoring API' });
 });
 
-// Mount all API under /api
+// Mount everything under /api
 app.use('/api', router);
 
 // ===== Error Handler =====
