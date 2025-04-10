@@ -184,7 +184,12 @@ jobs:
       # - name: Update Kubernetes Deployment Image
       #   run: |
       #     sed -i "s|IMAGE_PLACEHOLDER|${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:${{ github.sha }}|g" deployment.yml
-
+      - name: Create secret.yml from template
+        run: |
+          echo "${{ secrets.DB_PASSWORD }}" | base64 -w 0 > encoded.txt
+          ENCODED_PASSWORD=$(cat encoded.txt)
+          sed "s|REPLACE_ME_BASE64|$ENCODED_PASSWORD|" k8s/secret-template.yml > k8s/secret.yml
+          
       - name: Apply Kubernetes Manifests
         run: |
           kubectl apply -f k8s/
