@@ -4,9 +4,13 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { MongoClient } = require('mongodb');
 
-const password = 'Nitin@2025';
+const username = 'Nitin';
+const password = process.env.DB_PASSWORD;
 const encodedPassword = encodeURIComponent(password);
-const uri = `mongodb+srv://Nitin:${encodedPassword}@dinenit.cqxiskh.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${username}:${encodedPassword}@dinenit.cqxiskh.mongodb.net/?retryWrites=true&w=majority`;
+
+// const encodedPassword = encodeURIComponent(password);
+// const uri = `mongodb+srv://Nitin:${encodedPassword}@dinenit.cqxiskh.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri);
 /**
  * @swagger
