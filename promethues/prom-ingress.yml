@@ -10,7 +10,8 @@ spec:
   rules:
     - http:
         paths:
-          - path: /prometheus(/|$)(api/.*)
+          # - path: /prometheus(/|$)(api/.*)
+          - path: /prometheus(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
