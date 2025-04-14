@@ -20,7 +20,26 @@ data:
         static_configs:
           - targets: ['kube-state-metrics.monitoring.svc.cluster.local:8080']
       - job_name: 'node-exporter'
-        static_configs:
-          - targets: ['node-exporter.monitoring.svc.cluster.local:9100']
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          # Match only node-exporter pods
+          - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+            action: keep
+            regex: node-exporter
 
+          # Keep only containers exposing port 9100
+          - source_labels: [__meta_kubernetes_pod_container_port_number]
+            action: keep
+            regex: 9100
+
+          # Format pod IP and port
+          - source_labels: [__meta_kubernetes_pod_ip, __meta_kubernetes_pod_container_port_number]
+            target_label: __address__
+            replacement: '${1}:${2}'
+
+          # Optional: limit to namespace
+          - source_labels: [__meta_kubernetes_namespace]
+            action: keep
+            regex: monitoring
 
