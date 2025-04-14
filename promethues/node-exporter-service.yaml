@@ -4,8 +4,9 @@ metadata:
   name: node-exporter
   namespace: monitoring
   labels:
-    app.kubernetes.io/name: node-exporter
+    app: node-exporter
 spec:
+  clusterIP: None  # headless service to preserve pod IPs
   selector:
     app.kubernetes.io/name: node-exporter
   ports:
