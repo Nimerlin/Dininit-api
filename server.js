@@ -10,7 +10,7 @@ const router = express.Router();
 
 // ===== MongoDB Atlas Connection =====
 const username = 'Nitin';
-const password = process.env.DB_PASSWORD;
+const password = "Nitin@2025";
 const encodedPassword = encodeURIComponent(password);
 const uri = `mongodb+srv://${username}:${encodedPassword}@dinenit.cqxiskh.mongodb.net/?retryWrites=true&w=majority`;
 
