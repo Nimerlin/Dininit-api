@@ -89,7 +89,7 @@ const { MongoClient } = require('mongodb');
 
 // Environment + MongoDB setup
 const username = 'Nitin';
-const password = process.env.DB_PASSWORD;
+const password = "Nitin@2025";
 
 if (!password) {
     console.error('❌ Environment variable DB_PASSWORD is not set.');
