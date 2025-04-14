@@ -1,10 +1,12 @@
+# 
+
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: node-exporter
+  namespace: monitoring
   labels:
     app: node-exporter
-  namespace: monitoring
 spec:
   selector:
     matchLabels:
@@ -12,20 +14,21 @@ spec:
   template:
     metadata:
       labels:
-        app: node-exporter
+        app: node-exporter  # <- Must match Service selector
     spec:
-      hostPID: true  # Required for collecting host metrics
+      hostPID: true
       containers:
-      - name: node-exporter
-        image: prom/node-exporter:latest
-        ports:
-        - containerPort: 9100
-        args:
-        - "--path.rootfs=/host/root"  # Required for access to root filesystem
-        volumeMounts:
-        - name: host
-          mountPath: /host
+        - name: node-exporter
+          image: prom/node-exporter:latest
+          ports:
+            - containerPort: 9100
+          args:
+            - "--path.rootfs=/host"
+          volumeMounts:
+            - name: host
+              mountPath: /host
+              readOnly: true
       volumes:
-      - name: host
-        hostPath:
-          path: /
+        - name: host
+          hostPath:
+            path: /
