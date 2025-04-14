@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-exporter
+  labels:
+    app: node-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+    spec:
+      containers:
+      - name: node-exporter
+        image: prom/node-exporter:latest
+        ports:
+        - containerPort: 9100
+        hostPID: true  # Required to allow access to host metrics
+        args:
+        - "--path.rootfs=/host/root"  # Adjust if necessary for your setup
+        volumeMounts:
+        - name: host
+          mountPath: /host
+      volumes:
+      - name: host
+        hostPath:
+          path: /
