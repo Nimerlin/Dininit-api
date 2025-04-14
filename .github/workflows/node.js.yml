@@ -1,4 +1,246 @@
-name: Node.js Build & Docker Build Pipeline
+# name: Node.js Build & Docker Build Pipeline
+
+# on:
+#   pull_request:
+#     branches: [ "master" ]
+#   workflow_dispatch:
+
+# jobs:
+#   clone:
+#     name: Clone Repository
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v4
+
+#       - name: List Files After Checkout
+#         run: ls -R  # Lists all files after cloning
+
+#       - name: Upload Source Code
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: source-code
+#           path: .  # Uploads all project files
+
+#   build:
+#     name: Install Dependencies & Build
+#     runs-on: ubuntu-latest
+#     needs: clone
+#     steps:
+#       - name: Download Source Code
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: source-code
+#           path: .
+
+#       - name: List Files After Downloading Source Code
+#         run: ls -R  # Verifies all files were downloaded
+
+#       - name: Set Up Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: 20.x
+#           cache: 'npm'
+
+#       - name: Install Dependencies
+#         run: npm install --legacy-peer-deps
+
+#       - name: Fix Dependency Conflicts (Downgrade React)
+#         run: npm install react@18.2.0 react-dom@18.2.0 --legacy-peer-deps
+
+#       - name: Install Next.js
+#         run: npm install next --legacy-peer-deps
+
+#       - name: List Files After Installing Dependencies
+#         run: ls -R  # Ensures node_modules and all files exist
+
+#       - name: Build Project
+#         run: npm run build --if-present || (echo "BUILD FAILED" && exit 1)
+        
+#       - name: Verify Build Output
+#         run: ls -R .next || echo ".next folder NOT FOUND!"
+
+#       - name: List Files After Build
+#         run: ls -R  # Verifies all build outputs
+
+#       - name: Create Tar Archive
+#         run: tar -cvf node-build.tar dockerfile app/ package.json package-lock.json .next/ next.config.mjs server.js k8s/ promethues/
+
+#       - name: Upload Build Artifacts (Only Required Files)
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: node-build
+#           path: node-build.tar
+
+#   docker-build:
+#     name: Docker Build
+#     runs-on: ubuntu-latest
+#     needs: build
+#     permissions:
+#       id-token: write  # ✅ Required for OIDC
+#       contents: read
+#     environment: prod
+#     steps:
+#       - name: Download Build Artifacts
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: node-build
+#           path: .
+          
+#       - name: Extract Tar Archive
+#         run: tar -xvf node-build.tar
+
+#       - name: List Files After Downloading Build Artifacts
+#         run: ls -R  # Ensures all required files exist
+
+#       # ✅ Azure Login Using Client Secret
+#       - name: Log in to Azure
+#         run: |
+#           az login --service-principal \
+#             --username ${{ secrets.AZURE_CLIENT_ID }} \
+#             --password ${{ secrets.AZURE_CLIENT_SECRET }} \
+#             --tenant ${{ secrets.AZURE_TENANT_ID }}
+
+#       - name: Verify Azure Subscription
+#         run: az account show --output table
+
+#       # ✅ Docker Login to ACR
+#       - name: Docker Login to ACR
+#         run: az acr login --name ${{ secrets.ACR_NAME }}
+
+#       - name: Verify ACR Login
+#         run: az acr show --name ${{ secrets.ACR_NAME }} --query "loginServer" --output tsv
+
+#       - name: Set Docker Image Name with Git SHA
+#           echo "IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:${{ github.sha }}" >> $GITHUB_ENV
+#           echo "IMAGE_LATEST=${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:latest" >> $GITHUB_ENV
+
+#       - name: Build Docker Image
+#         run: docker build -t $IMAGE_NAME .
+
+#       - name: Push Docker Image to ACR
+#         run: |
+#           docker push $IMAGE_NAME
+#           docker tag $IMAGE_NAME $IMAGE_LATEST
+#           docker push $IMAGE_LATEST
+
+#       - name: Verify ACR Image Upload
+#         run: az acr repository show-tags --name ${{ secrets.ACR_NAME }} --repository dinenit-api-app --output table
+
+#       - name: Upload k8s folder
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: k8s-folder
+#           path: k8s/
+
+#       - name: Upload promethues folder
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: promethues-folder
+#           path: promethues/
+
+#   deploy-api-to-aks:
+#     name: Deploy api to AKS
+#     runs-on: ubuntu-latest
+#     needs: docker-build
+#     permissions:
+#       id-token: write
+#       contents: read
+#     environment: prod
+#     steps:
+
+#       - name: Download Deployment and Services
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: k8s-folder
+#           path: k8s/
+
+#       - name: List Files After Downloading Source Code
+#         run: ls -R   
+
+#       # ✅ Azure Login
+#       - name: Log in to Azure
+#         run: |
+#           az login --service-principal \
+#             --username ${{ secrets.AZURE_CLIENT_ID }} \
+#             --password ${{ secrets.AZURE_CLIENT_SECRET }} \
+#             --tenant ${{ secrets.AZURE_TENANT_ID }}
+
+#       - name: Set Kubernetes Context
+#         run: |
+#           az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
+#             --name ${{ secrets.AKS_CLUSTER_NAME }}
+
+#       - name: Verify Kubernetes Context
+#         run: kubectl cluster-info
+
+#       # ✅ Replace Image Tag in Manifest Files
+#       - name: Update Kubernetes Deployment Image
+#         run: |
+#           sed -i "s|IMAGE_PLACEHOLDER|${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:${{ github.sha }}|g" deployment.yml
+
+#       - name: Create secret.yml from template
+#         run: |
+#           echo "${{ secrets.DB_PASSWORD }}" | base64 -w 0 > encoded.txt
+#           ENCODED_PASSWORD=$(cat encoded.txt)
+#           sed "s|REPLACE_ME_BASE64|$ENCODED_PASSWORD|" k8s/secret-template.yml > k8s/secret.yml
+          
+#       - name: Apply Kubernetes Manifests
+#         run: |
+#           kubectl apply -f k8s/
+
+#       - name: Verify Deployment
+#         run: kubectl get pods -o wide
+  
+#   deploy-promethues-to-aks:
+#     name: Deploy Promethues & cAdvisor to AKS
+#     runs-on: ubuntu-latest
+#     needs: deploy-api-to-aks
+#     permissions:
+#       id-token: write
+#       contents: read
+#     environment: prod
+#     steps:
+
+#       - name: Download Deployment and Services
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: promethues-folder
+#           path: promethues/
+
+#       - name: List Files After Downloading Source Code
+#         run: ls -R   
+
+#       # ✅ Azure Login
+#       - name: Log in to Azure
+#         run: |
+#           az login --service-principal \
+#             --username ${{ secrets.AZURE_CLIENT_ID }} \
+#             --password ${{ secrets.AZURE_CLIENT_SECRET }} \
+#             --tenant ${{ secrets.AZURE_TENANT_ID }}
+
+#       - name: Set Kubernetes Context
+#         run: |
+#           az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
+#             --name ${{ secrets.AKS_CLUSTER_NAME }}
+
+#       - name: Verify Kubernetes Context
+#         run: kubectl cluster-info
+
+#       # # ✅ Replace Image Tag in Manifest Files
+#       # - name: Update Kubernetes Deployment Image
+#       #   run: |
+#       #     sed -i "s|IMAGE_PLACEHOLDER|${{ secrets.ACR_NAME }}.azurecr.io/dinenit-ui-app:${{ github.sha }}|g" deployment.yml
+
+#       - name: Apply Kubernetes Manifests
+#         run: |
+#           kubectl apply -f promethues/
+
+#       - name: Verify Deployment
+#         run: kubectl get pods -o wide
+
+
+name: API-DINENIT
 
 on:
   pull_request:
@@ -13,19 +255,20 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: List Files After Checkout
-        run: ls -R  # Lists all files after cloning
-
       - name: Upload Source Code
         uses: actions/upload-artifact@v4
         with:
           name: source-code
-          path: .  # Uploads all project files
+          path: .
 
-  build:
-    name: Install Dependencies & Build
+  docker-build:
+    name: Docker Build & Push
     runs-on: ubuntu-latest
     needs: clone
+    permissions:
+      id-token: write
+      contents: read
+    environment: prod
     steps:
       - name: Download Source Code
         uses: actions/download-artifact@v4
@@ -33,105 +276,29 @@ jobs:
           name: source-code
           path: .
 
-      - name: List Files After Downloading Source Code
-        run: ls -R  # Verifies all files were downloaded
-
-      - name: Set Up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Fix Dependency Conflicts (Downgrade React)
-        run: npm install react@18.2.0 react-dom@18.2.0 --legacy-peer-deps
-
-      - name: Install Next.js
-        run: npm install next --legacy-peer-deps
-
-      - name: List Files After Installing Dependencies
-        run: ls -R  # Ensures node_modules and all files exist
-
-      - name: Build Project
-        run: npm run build --if-present || (echo "BUILD FAILED" && exit 1)
-        
-      - name: Verify Build Output
-        run: ls -R .next || echo ".next folder NOT FOUND!"
-
-      - name: List Files After Build
-        run: ls -R  # Verifies all build outputs
-
-      - name: Create Tar Archive
-        run: tar -cvf node-build.tar dockerfile app/ package.json package-lock.json .next/ next.config.mjs server.js k8s/ promethues/
-
-      - name: Upload Build Artifacts (Only Required Files)
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-build
-          path: node-build.tar
-
-  docker-build:
-    name: Docker Build
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      id-token: write  # ✅ Required for OIDC
-      contents: read
-    environment: prod
-    steps:
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: node-build
-          path: .
-          
-      - name: Extract Tar Archive
-        run: tar -xvf node-build.tar
-
-      - name: List Files After Downloading Build Artifacts
-        run: ls -R  # Ensures all required files exist
-
-      # ✅ Azure Login Using Client Secret
-      - name: Log in to Azure
+      - name: Azure Login
         run: |
           az login --service-principal \
             --username ${{ secrets.AZURE_CLIENT_ID }} \
             --password ${{ secrets.AZURE_CLIENT_SECRET }} \
             --tenant ${{ secrets.AZURE_TENANT_ID }}
 
-      - name: Verify Azure Subscription
-        run: az account show --output table
-
-      # ✅ Docker Login to ACR
       - name: Docker Login to ACR
         run: az acr login --name ${{ secrets.ACR_NAME }}
 
-      - name: Verify ACR Login
-        run: az acr show --name ${{ secrets.ACR_NAME }} --query "loginServer" --output tsv
-
-      - name: Set Docker Image Name with Git SHA
-        run: echo "IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:${{ github.sha }}" >> $GITHUB_ENV
+      - name: Set Docker Image Names
+        run: |
+          echo "IMAGE_NAME=${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:${{ github.sha }}" >> $GITHUB_ENV
+          echo "IMAGE_LATEST=${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:latest" >> $GITHUB_ENV
 
       - name: Build Docker Image
         run: docker build -t $IMAGE_NAME .
 
       - name: Push Docker Image to ACR
         run: |
-          docker tag $IMAGE_NAME ${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:latest
-          docker push ${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:latest
-
-      # ✅ Verify if Image Exists in ACR
-      - name: List Docker Images in ACR
-        run: |
-          echo "Listing images in ACR:"
-          az acr repository list --name ${{ secrets.ACR_NAME }} --output table
-
-      - name: Show Image Tags in ACR
-        run: |
-          echo "Showing available tags for dinenit-api-app:"
-          az acr repository show-tags --name ${{ secrets.ACR_NAME }} --repository dinenit-api-app --output table
+          docker push $IMAGE_NAME
+          docker tag $IMAGE_NAME $IMAGE_LATEST
+          docker push $IMAGE_LATEST
 
       - name: Upload k8s folder
         uses: actions/upload-artifact@v4
@@ -139,14 +306,14 @@ jobs:
           name: k8s-folder
           path: k8s/
 
-      - name: Upload promethues folder
+      - name: Upload prometheus folder
         uses: actions/upload-artifact@v4
         with:
           name: promethues-folder
           path: promethues/
 
   deploy-api-to-aks:
-    name: Deploy api to AKS
+    name: Deploy API to AKS
     runs-on: ubuntu-latest
     needs: docker-build
     permissions:
@@ -154,18 +321,13 @@ jobs:
       contents: read
     environment: prod
     steps:
-
-      - name: Download Deployment and Services
+      - name: Download k8s Manifests
         uses: actions/download-artifact@v4
         with:
           name: k8s-folder
           path: k8s/
 
-      - name: List Files After Downloading Source Code
-        run: ls -R   
-
-      # ✅ Azure Login
-      - name: Log in to Azure
+      - name: Azure Login
         run: |
           az login --service-principal \
             --username ${{ secrets.AZURE_CLIENT_ID }} \
@@ -177,28 +339,24 @@ jobs:
           az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
             --name ${{ secrets.AKS_CLUSTER_NAME }}
 
-      - name: Verify Kubernetes Context
-        run: kubectl cluster-info
+      - name: Replace Image in Deployment YAML
+        run: |
+          sed -i "s|IMAGE_PLACEHOLDER|${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:${{ github.sha }}|g" k8s/deployment.yml
 
-      # # ✅ Replace Image Tag in Manifest Files
-      # - name: Update Kubernetes Deployment Image
-      #   run: |
-      #     sed -i "s|IMAGE_PLACEHOLDER|${{ secrets.ACR_NAME }}.azurecr.io/dinenit-api-app:${{ github.sha }}|g" deployment.yml
-      - name: Create secret.yml from template
+      - name: Create Secret YAML from Template
         run: |
           echo "${{ secrets.DB_PASSWORD }}" | base64 -w 0 > encoded.txt
           ENCODED_PASSWORD=$(cat encoded.txt)
           sed "s|REPLACE_ME_BASE64|$ENCODED_PASSWORD|" k8s/secret-template.yml > k8s/secret.yml
-          
-      - name: Apply Kubernetes Manifests
-        run: |
-          kubectl apply -f k8s/
+
+      - name: Apply Kubernetes Resources
+        run: kubectl apply -f k8s/
 
       - name: Verify Deployment
         run: kubectl get pods -o wide
-  
+
   deploy-promethues-to-aks:
-    name: Deploy Promethues & cAdvisor to AKS
+    name: Deploy Prometheus & cAdvisor
     runs-on: ubuntu-latest
     needs: deploy-api-to-aks
     permissions:
@@ -206,18 +364,13 @@ jobs:
       contents: read
     environment: prod
     steps:
-
-      - name: Download Deployment and Services
+      - name: Download Prometheus Configs
         uses: actions/download-artifact@v4
         with:
           name: promethues-folder
           path: promethues/
 
-      - name: List Files After Downloading Source Code
-        run: ls -R   
-
-      # ✅ Azure Login
-      - name: Log in to Azure
+      - name: Azure Login
         run: |
           az login --service-principal \
             --username ${{ secrets.AZURE_CLIENT_ID }} \
@@ -229,17 +382,8 @@ jobs:
           az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
             --name ${{ secrets.AKS_CLUSTER_NAME }}
 
-      - name: Verify Kubernetes Context
-        run: kubectl cluster-info
+      - name: Apply Prometheus & cAdvisor YAMLs
+        run: kubectl apply -f promethues/
 
-      # # ✅ Replace Image Tag in Manifest Files
-      # - name: Update Kubernetes Deployment Image
-      #   run: |
-      #     sed -i "s|IMAGE_PLACEHOLDER|${{ secrets.ACR_NAME }}.azurecr.io/dinenit-ui-app:${{ github.sha }}|g" deployment.yml
-
-      - name: Apply Kubernetes Manifests
-        run: |
-          kubectl apply -f promethues/
-
-      - name: Verify Deployment
+      - name: Verify Monitoring Pods
         run: kubectl get pods -o wide
